@@ -1,0 +1,10 @@
+# 运行（日志/指标 → LLM 链路）
+numpy==1.24.4
+pandas==2.0.3
+requests==2.32.5
+drain3==0.9.11
+# 有监督指标工具（加载随包模型、训练新 benchmark）；模型用这些版本训练，跨大版本加载 pickle 不保证兼容
+lightgbm==4.6.0
+scikit-learn==1.4.2
+# 测试
+pytest

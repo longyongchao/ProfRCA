@@ -1,0 +1,68 @@
+{
+ "cpu": {
+  "category": "cpu",
+  "headline": "CPU 资源耗尽（CPU 打满）",
+  "description": "该服务容器 CPU 使用率被打满，请求处理变慢、下游延迟上升",
+  "mechanism_id": "cpu_saturation"
+ },
+ "delay": {
+  "category": "network",
+  "headline": "网络延迟",
+  "description": "该服务网络注入时延，调用其的上游延迟整体抬升",
+  "mechanism_id": "network_delay"
+ },
+ "disk": {
+  "category": "disk_io",
+  "headline": "磁盘 I/O 压力",
+  "description": "该服务磁盘读写被大量占用，I/O 等待导致请求变慢",
+  "mechanism_id": "disk_io_pressure"
+ },
+ "f1": {
+  "category": "code",
+  "headline": "代码级缺陷 F1",
+  "description": "该服务代码中注入的缺陷导致异常",
+  "mechanism_id": "code_defect"
+ },
+ "f2": {
+  "category": "code",
+  "headline": "代码级缺陷 F2",
+  "description": "该服务代码中注入的缺陷导致异常",
+  "mechanism_id": "code_defect"
+ },
+ "f3": {
+  "category": "code",
+  "headline": "代码级缺陷 F3",
+  "description": "该服务代码中注入的缺陷导致异常",
+  "mechanism_id": "code_defect"
+ },
+ "f4": {
+  "category": "code",
+  "headline": "代码级缺陷 F4",
+  "description": "该服务代码中注入的缺陷导致异常",
+  "mechanism_id": "code_defect"
+ },
+ "f5": {
+  "category": "code",
+  "headline": "代码级缺陷 F5",
+  "description": "该服务代码中注入的缺陷导致异常",
+  "mechanism_id": "code_defect"
+ },
+ "loss": {
+  "category": "network",
+  "headline": "网络丢包",
+  "description": "该服务网络丢包，重传与超时导致错误率与延迟上升",
+  "mechanism_id": "network_loss"
+ },
+ "mem": {
+  "category": "memory",
+  "headline": "内存耗尽（内存压力）",
+  "description": "该服务内存占用持续上升直至受限，处理变慢或被 OOM",
+  "mechanism_id": "memory_pressure"
+ },
+ "socket": {
+  "category": "network",
+  "headline": "Socket / 连接资源耗尽",
+  "description": "该服务 socket 连接数异常，连接建立失败或排队",
+  "mechanism_id": "socket_exhaustion"
+ }
+}

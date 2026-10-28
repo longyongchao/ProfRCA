@@ -1,0 +1,339 @@
+{
+ "tools": {
+  "dbpa": {
+   "file": "dbpa_metric_ens_v1.pkl",
+   "sha256": "72d4b1badd32db6e7080e46201a56553c06d7e92cd373dedf7ad924108661d15",
+   "bytes": 6637165,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "mode": "multiclass",
+   "labels": [
+    "concurrent_commits",
+    "concurrent_inserts",
+    "heavy_workload",
+    "io_saturation",
+    "lock_waits",
+    "missing_indexes",
+    "small_shared_buffer",
+    "too_many_indexes",
+    "vacuum"
+   ],
+   "train_cases": 19397,
+   "role": "production",
+   "class": "MetricEnsemble",
+   "feature_sets": [
+    "v1",
+    "shape_v1"
+   ],
+   "training": {
+    "script": "profrca.train.train_dbpa",
+    "data": "DBPA 官方全量 − 10% 评测子集（2,155 case）",
+    "sets": [
+     "v1",
+     "shape_v1"
+    ],
+    "k_per_label": 20,
+    "seeds": 5
+   },
+   "evaluation": {
+    "random": {
+     "acc": 0.9802,
+     "mysql": 1.0,
+     "postgresql": 0.9733
+    },
+    "loho": {
+     "acc": 0.9391,
+     "top1": 0.9429,
+     "mysql": 0.9928,
+     "postgresql": 0.9204
+    },
+    "loho_k20": {
+     "acc_mean": 0.8734,
+     "acc_std": 0.0043,
+     "top1_mean": 0.8859,
+     "seeds": 5
+    },
+    "leakage_audit_loho": {
+     "full_window": 0.937,
+     "pre_injection_only": 0.72,
+     "prior": 0.271
+    }
+   }
+  },
+  "dbpa_v1": {
+   "file": "dbpa_metric_clf_v1.pkl",
+   "sha256": "fb92c3d1387cc10f29daaefd9bdb01e74621f68c2eca5ed96bd48270357f25bd",
+   "bytes": 3351425,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "mode": "multiclass",
+   "labels": [
+    "concurrent_commits",
+    "concurrent_inserts",
+    "heavy_workload",
+    "io_saturation",
+    "lock_waits",
+    "missing_indexes",
+    "small_shared_buffer",
+    "too_many_indexes",
+    "vacuum"
+   ],
+   "train_cases": 19397,
+   "role": "ablation",
+   "class": "MetricClassifier",
+   "feature_sets": [
+    "v1"
+   ],
+   "training": {
+    "script": "profrca.train.train_dbpa",
+    "data": "DBPA 官方全量 − 10% 评测子集（2,155 case）",
+    "sets": [
+     "v1"
+    ],
+    "k_per_label": 20,
+    "seeds": 5,
+    "flag": "--save-members"
+   },
+   "evaluation": {
+    "random": {
+     "acc": 0.9881
+    },
+    "loho": {
+     "acc": 0.9081
+    }
+   }
+  },
+  "dbpa_rel_v1": {
+   "file": "dbpa_metric_clf_rel_v1.pkl",
+   "sha256": "44886a5dd399fbed9dbd0d10c9d338e5cd921fc6979d1955020ada525b6a4216",
+   "bytes": 3413294,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "mode": "multiclass",
+   "labels": [
+    "concurrent_commits",
+    "concurrent_inserts",
+    "heavy_workload",
+    "io_saturation",
+    "lock_waits",
+    "missing_indexes",
+    "small_shared_buffer",
+    "too_many_indexes",
+    "vacuum"
+   ],
+   "train_cases": 19397,
+   "role": "ablation",
+   "class": "MetricClassifier",
+   "feature_sets": [
+    "rel_v1"
+   ],
+   "training": {
+    "script": "profrca.train.train_dbpa",
+    "data": "DBPA 官方全量 − 10% 评测子集（2,155 case）",
+    "sets": [
+     "rel_v1"
+    ],
+    "k_per_label": 20,
+    "seeds": 5,
+    "flag": "--save-members"
+   },
+   "evaluation": {
+    "random": {
+     "acc": 0.9863
+    },
+    "loho": {
+     "acc": 0.8965
+    }
+   }
+  },
+  "dbpa_shape_v1": {
+   "file": "dbpa_metric_clf_shape_v1.pkl",
+   "sha256": "4f9d339b08398dbf0aad8f264a4c2b53b3a5ce773a47638856484b793716ad98",
+   "bytes": 3288189,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "mode": "multiclass",
+   "labels": [
+    "concurrent_commits",
+    "concurrent_inserts",
+    "heavy_workload",
+    "io_saturation",
+    "lock_waits",
+    "missing_indexes",
+    "small_shared_buffer",
+    "too_many_indexes",
+    "vacuum"
+   ],
+   "train_cases": 19397,
+   "role": "ablation",
+   "class": "MetricClassifier",
+   "feature_sets": [
+    "shape_v1"
+   ],
+   "training": {
+    "script": "profrca.train.train_dbpa",
+    "data": "DBPA 官方全量 − 10% 评测子集（2,155 case）",
+    "sets": [
+     "shape_v1"
+    ],
+    "k_per_label": 20,
+    "seeds": 5,
+    "flag": "--save-members"
+   },
+   "evaluation": {
+    "random": {
+     "acc": 0.9536
+    },
+    "loho": {
+     "acc": 0.9323
+    }
+   }
+  },
+  "rcaeval": {
+   "file": "rcaeval_metric_clf_v1.pkl",
+   "sha256": "768e8bf201e3253320fbf8f24980a550d967dd630b6d737609070e119e3059db",
+   "bytes": 3046258,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "role": "production",
+   "class": "ServiceFaultClassifier",
+   "mode": "service",
+   "feature_sets": null,
+   "labels": [
+    "cpu",
+    "delay",
+    "disk",
+    "f1",
+    "f2",
+    "f3",
+    "f4",
+    "f5",
+    "loss",
+    "mem",
+    "socket"
+   ],
+   "kinds": [
+    "cpu",
+    "diskio",
+    "error",
+    "latency-50",
+    "latency-90",
+    "mem",
+    "socket",
+    "workload"
+   ],
+   "train_cases": 697,
+   "training": {
+    "script": "profrca.train.train_rcaeval",
+    "data": "rcaeval（732 case − 35 留出）",
+    "cases": "rcaeval_cases.txt",
+    "exclude": "rcaeval_heldout.txt",
+    "label_info": "rcaeval.json"
+   },
+   "evaluation": {
+    "logo:benchmark_attrs.system": {
+     "loc1": 0.8811,
+     "joint1": 0.5178,
+     "acc_mech": 0.6339,
+     "n": 732
+    },
+    "group5:system,location,labels": {
+     "loc1": 0.9194,
+     "joint1": 0.6325,
+     "hit4": 0.8183
+    },
+    "heldout35": {
+     "loc1": 1.0,
+     "joint1": 0.8
+    },
+    "k20_seeds5": {
+     "acc_mech_mean": 0.5847,
+     "acc_mech_std": 0.0079
+    }
+   }
+  },
+  "wangqing": {
+   "file": "wangqing_metric_ens_v1.pkl",
+   "sha256": "0f0b9884dc291da49e012db8f2b8184302eba2fda1c157f980d2ecea3944768a",
+   "bytes": 1339528,
+   "trained_at": "2026-10-28T11:09:12Z",
+   "libs": {
+    "python": "3.9.6",
+    "lightgbm": "4.6.0",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.24.4",
+    "pandas": "2.0.3"
+   },
+   "role": "production",
+   "class": "MetricEnsemble",
+   "mode": "multiclass",
+   "feature_sets": [
+    "v1",
+    "shape_v1"
+   ],
+   "labels": [
+    "cpu",
+    "disk_fill",
+    "disk_io",
+    "memory",
+    "network_delay",
+    "network_loss"
+   ],
+   "train_cases": 101,
+   "training": {
+    "script": "profrca.train.train_wangqing",
+    "data": "wangqing（101 个带指标的 case）",
+    "cases": "wangqing_cases.txt"
+   },
+   "evaluation": {
+    "logo:labels": {
+     "acc": 0.6678,
+     "top1": 0.9406,
+     "n": 101
+    },
+    "logo:derived.round": {
+     "acc": 0.9129,
+     "top1": 0.9901
+    },
+    "prior": {
+     "acc": 0.1337
+    },
+    "k20_seeds5": {
+     "acc_mean": 0.7007,
+     "acc_std": 0.0111,
+     "top1_mean": 0.9465
+    }
+   }
+  }
+ }
+}
