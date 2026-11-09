@@ -61,13 +61,15 @@ def _tool_root_causes(rcs, label_info, closed):
 
 
 def diagnose(log=None, metrics=None, *, tools=None, label_space="mechanisms", time_col="time",
-             use_tools=True, **llm_kwargs):
+             use_tools=True, line_refs=0, **llm_kwargs):
     """诊断一个故障样例。
 
     log:         日志 TXT 路径（可选；没有日志时走仅指标路径）
     metrics:     指标宽表 CSV 路径或 DataFrame（可选；首列 time，其余列 "实体|指标"）
     tools:       MetricToolRouter / {名称: 工具} / None（None 时不用有监督工具）
     label_space: "mechanisms"（封闭 30 机制，默认）、None（宿主项目的一级类别白名单）或自定义 dict
+    line_refs:   > 0 时每个候选附 evidence_lines {T#: [行号, ...]}（每个模板最多 line_refs 行，1 起算），
+                 不改变 prompt；默认 0 不输出
     其余关键字参数原样传给 fast_rca.diagnose_profile（world_mode、metrics_only_mode、request_timeout 等）。
 
     返回 {"root_causes": [...], "route": "metric_tool"|"llm", "llm_calls", "output_tokens", ...}；
@@ -87,7 +89,7 @@ def diagnose(log=None, metrics=None, *, tools=None, label_space="mechanisms", ti
     from .fast_rca import build_profile, diagnose_profile, parse_log
     from .metric_events import metrics_text
     mt, mode = metrics_text(wide, time_col, split=split_metric_col) if wide is not None else (None, None)
-    prof = build_profile(parse_log(str(log))) if log else None
+    prof = build_profile(parse_log(str(log)), line_refs=line_refs) if log else None
     out = diagnose_profile(prof, mt, mode == "raw", label_space=ls, **llm_kwargs)
     usage = out.get("usage") or []
     out.update(route="llm", metrics_mode=mode, llm_calls=len(usage),

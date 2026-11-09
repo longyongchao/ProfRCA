@@ -83,13 +83,17 @@ python -m profrca --log case/log.txt --metrics case/metrics.csv
 
 # 只有日志
 python -m profrca --log case/log.txt --details      # --details 保留完整异常画像
+
+# 附上证据行号：每个引用的模板 T# 最多给 5 个行号
+python -m profrca --log case/log.txt --lines 5
 ```
 
 各选项说明：
 
 - `--tools`：启用 `models/` 下的工具；
 - `--models-dir`：换成别的模型目录；
-- `--open-world`：答案空间不限于 30 个机制，改用一级类别白名单。
+- `--open-world`：答案空间不限于 30 个机制，改用一级类别白名单；
+- `--lines K`：每个候选附上所引用模板在原日志中的行号，每个模板最多 K 行（见 3.4 节）。
 
 输出 JSON 打印到标准输出。只要有根因候选，退出码就是 0。
 
@@ -110,6 +114,7 @@ out["llm_calls"], out["output_tokens"]   # 成本：调用次数、LLM 输出 to
 
 - `metrics` 可以是 CSV 路径，也可以是 `pandas.DataFrame`。
 - `tools=None` 表示不用有监督工具。
+- `line_refs=K`：大于 0 时，每个候选附 `evidence_lines`（见 3.4 节）。默认 0，不输出。
 - `label_space`：
   - `"mechanisms"`（默认）：封闭的 30 个机制；
   - `None`：开放的一级类别白名单；
@@ -125,6 +130,7 @@ out["llm_calls"], out["output_tokens"]   # 成本：调用次数、LLM 输出 to
 | `headline` / `description` | 中文的机制名与机制说明；工具路径还会附上置信度和主要依据的指标 |
 | `location` | 根因位置（服务、实体）；未知时为 `null` |
 | `evidence_templates` / `evidence_refs` | LLM 链路引用的日志模板编号 `T#` 和指标证据编号 `M#`，可以回查画像 |
+| `evidence_lines` | 仅在 `line_refs > 0` 且引用了 `T#` 时出现：`{T#: [行号, ...]}` |
 | `label` / `probability` | 仅工具路径：原生标签与概率 |
 
 ### 3.3 LLM 服务配置（只有 LLM 链路需要）
@@ -139,6 +145,17 @@ out["llm_calls"], out["output_tokens"]   # 成本：调用次数、LLM 输出 to
 | `FAST_RCA_PARSER` | 日志解析器。默认 `v2`（Drain3）；`v1` 是宿主项目的旧 LILAC 链路，只用于复现历史结果 |
 
 有监督工具命中时完全不调用模型，不需要配置这些变量。
+
+### 3.4 证据行号（可选）
+
+日志链路的证据是模板 `T#`，一个模板通常对应原日志中的很多行。设置 `line_refs=K`（命令行 `--lines K`）后：
+
+- 候选的 `evidence_lines` 给出每个被引用模板的行号，例如 `{"T3": [1042, 1043, 1187]}`；
+- 行号从 1 起算，指原始日志文件的物理行；
+- 优先取异常起点之后最先出现的 K 行；模板在起点之后没有出现时，取它最先出现的 K 行；
+- 带 `--details` 时，画像中每个模板另有 `lines_scope`（`after_onset` 或 `all`）、`first_line` 和 `last_line`。
+
+行号只写进输出，不进入 prompt。所以开不开这个选项，发给 LLM 的内容完全相同，诊断结果也一样。指标证据 `M#` 和有监督工具路径没有行号。
 
 ---
 
@@ -407,6 +424,7 @@ python -m pytest profrca/tests -q
 | 测试文件 | 覆盖内容 |
 |---|---|
 | `test_train.py` | 用合成数据跑通 multiclass / service 两种训练模式：交叉验证分组、K 抽样、MANIFEST 登记（不记本机路径）、训练后路由到新工具；schema 不匹配时回落 LLM 链路（测试中替换为假模型，不发网络请求） |
+| `test_line_refs.py` | 行号选项默认关闭时画像不含行号；开启前后 prompt 完全相同；行号指回属于该模板的行，优先取异常起点之后 |
 | `test_models.py` | 随包模型的 sha256 与 MANIFEST 一致；按 role 加载；按 schema 路由，输出映射到 30 机制且不重复；宿主项目的旧导入路径是别名 |
 
 测试不依赖任何 benchmark 数据，也不调用 LLM。

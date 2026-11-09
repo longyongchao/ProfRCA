@@ -19,11 +19,14 @@ def main(argv=None):
     ap.add_argument("--open-world", action="store_true",
                     help="不用封闭 30 机制清单，改用一级类别白名单（宿主项目默认口径）")
     ap.add_argument("--details", action="store_true", help="输出中保留完整画像")
+    ap.add_argument("--lines", type=int, default=0, metavar="K",
+                    help="每个候选附上所引用模板 T# 的行号（每个模板最多 K 行，优先取变点后）")
     a = ap.parse_args(argv)
     if not a.log and not a.metrics:
         ap.error("至少提供 --log 或 --metrics")
     tools = load_tools(a.models_dir) if a.tools else None
-    out = diagnose(a.log, a.metrics, tools=tools, label_space=None if a.open_world else "mechanisms")
+    out = diagnose(a.log, a.metrics, tools=tools, label_space=None if a.open_world else "mechanisms",
+                   line_refs=a.lines)
     if not a.details:
         out.pop("profile", None)
     json.dump(out, sys.stdout, ensure_ascii=False, indent=1, default=str)

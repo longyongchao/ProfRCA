@@ -342,7 +342,10 @@ def _is_filler(raw):
     return not body.strip() or bool(_FRAME.match(body))
 
 
-def build_profile(entries):
+def build_profile(entries, line_refs=0):
+    """line_refs > 0 时每个模板额外记录行号（opt-in，不进入 prompt）：
+    lines = 变点后最先出现的 line_refs 行（模板没有变点后的行时取最先出现的行），
+    lines_scope = "after_onset" | "all"，first_line / last_line = 首末次出现的行号。"""
     rows, last_ts = [], None
     for e in entries:
         ts = _parse_ts(e.timestamp) or last_ts   # 多行日志的续行继承上一行时间
@@ -397,6 +400,14 @@ def build_profile(entries):
         after = ts >= onset
         if after and "example_after" not in info[key]:
             info[key]["example_after"] = e.raw_text
+        if line_refs > 0:
+            d = info[key]
+            d.setdefault("first_line", e.line_number)
+            d["last_line"] = e.line_number
+            if len(d.setdefault("lines_all", [])) < line_refs:
+                d["lines_all"].append(e.line_number)
+            if after and len(d.setdefault("lines_after", [])) < line_refs:
+                d["lines_after"].append(e.line_number)
         nums = _numbers(e.message)
         for i, (v, unit, snip) in enumerate(nums):
             s = series[(key, i, len(nums), unit)]
@@ -429,6 +440,10 @@ def build_profile(entries):
              "level": d["level"], "first": d["first"], "last": d["last"],
              "example": d.get("example_after") or d["example"],
              "comps": [k for k, _ in d["comps"].most_common(3) if k]}
+        if line_refs > 0:
+            t.update(lines=d.get("lines_after") or d["lines_all"],
+                     lines_scope="after_onset" if d.get("lines_after") else "all",
+                     first_line=d["first_line"], last_line=d["last_line"])
         tmpl.append(t)
 
     comps = []
@@ -753,7 +768,7 @@ def _to_predictions(obj, chosen, *, valid_metric_refs=None, candidate_diversity=
         cat = label_space["category"].get(mid, "invalid") if label_space else str(rc.get("category", "")).strip()
         mech = mid if label_space else str(rc.get("mechanism", "")).strip()
         loc = str(rc.get("location", "")).strip()
-        ev, refs = [], []
+        ev, refs, ev_lines = [], [], {}
         for ref in rc.get("evidence") or []:
             ref = str(ref).strip()
             m = re.match(r"T(\d+)$", ref)
@@ -761,12 +776,15 @@ def _to_predictions(obj, chosen, *, valid_metric_refs=None, candidate_diversity=
                 index = int(m.group(1))
                 refs.append(f"T{index}")
                 ev.append(chosen[index][1]["key"][:120])
+                if "lines" in chosen[index][1]:   # 画像带行号时（build_profile(line_refs>0)）
+                    ev_lines[f"T{index}"] = chosen[index][1]["lines"]
             elif re.match(r"M\d+$", ref) and (valid_metric_refs is None or ref in valid_metric_refs):
                 refs.append(ref)
                 ev.append(ref)
         out.append({"type": cat, "headline": mech,
                     "description": f"{mech}（类别 {cat}，位置 {loc}）。{rc.get('why', '')}",
                     "location": loc, "evidence_templates": ev, "evidence_refs": refs,
+                    **({"evidence_lines": ev_lines} if ev_lines else {}),
                     **({"mechanism_id": mid} if label_space else {})})
 
     if candidate_diversity is None or label_space:   # 机制集模式只要求 mechanism_id 互不相同（上面已去重）
