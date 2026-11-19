@@ -403,6 +403,32 @@ from profrca import diagnose, load_tools
 git submodule update --init profrca
 ```
 
+宿主项目前端的诊断流程如下。工具加载或推理失败时回退到 LLM 链路，是宿主运行时（`server/diagnose/profrca_runtime.py`）的行为；直接调用本包的 `diagnose()` 时，异常会直接抛给调用方。
+
+```mermaid
+flowchart TD
+    A["前端选择 ProfRCA"] --> B["上传日志和/或指标 CSV"]
+    B --> C["校验格式、凭据脱敏、保存临时输入"]
+    C --> D{"是否附带指标？"}
+    D -->|是| E["加载随包 LightGBM 生产工具<br/>DBPA / RCAEval / wangqing"]
+    E --> F{"最佳指标名匹配率 ≥ 90%？"}
+    F -->|是| G["提取统计特征并执行工具推理"]
+    G --> H["映射并去重为统一根因机制<br/>route = metric_tool，LLM 调用为 0"]
+    D -->|否| I["若有日志：解析并生成 Drain3 模板画像"]
+    E -->|加载失败| I
+    F -->|否| I
+    G -->|推理失败| I
+    I --> J["若有指标：转换为预算内数值表或变化事件"]
+    J --> K["LLM 初筛：从 30 个机制中选择候选"]
+    K --> L{"是否有需放大的组件证据？"}
+    L -->|是| M["组件放大与 LLM 复核<br/>可引用真实日志模板编号 T#"]
+    L -->|否| N["保留初筛候选"]
+    M --> O["route = llm<br/>记录实际调用数与 token 用量"]
+    N --> O
+    H --> P["统一 diagnosis.v2 结果<br/>保存会话并展示候选与实际路径"]
+    O --> P
+```
+
 ---
 
 ## 9. 安全与数据
