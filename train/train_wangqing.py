@@ -2,14 +2,14 @@
 """wangqing 指标工具（wangqing_metric_ens_v1.pkl）：通用训练器 multiclass 模式（v1 + shape_v1，与 DBPA 同配方）。
 
 数据：--data 下带 metrics.csv 的 101 个 case（CockroachDB 单主机，全部为双根因组合；
-宿主项目为 benchmarks-data/closed_world_rca/wangqing），按 splits/wangqing_cases.txt 的顺序读取。
+宿主项目为 benchmarks-data/profrca_inputs/wangqing），按 splits/wangqing_cases.txt 的顺序读取。
 标签说明按 mechanisms.NATIVE 映射到 30 机制自动生成。
 
   logo:labels         主口径：留一组合（14 折），测试组合整体未见过
   logo:derived.round  消融：留一轮（同一组合按注入时间的第 r 次重复为一折），同分布上界
   另外输出 prior 基线（各留一组合折按训练集标签频次排序的常数预测）到 runs/wangqing/prior.json。
 
-  DYLD_LIBRARY_PATH=... python -m profrca.train.train_wangqing --data benchmarks-data/closed_world_rca/wangqing
+  DYLD_LIBRARY_PATH=... python -m profrca.train.train_wangqing --data benchmarks-data/profrca_inputs/wangqing
 """
 from __future__ import annotations
 

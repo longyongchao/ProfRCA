@@ -4,14 +4,14 @@ eval_metric_clf_ensemble.py 的配方。
 
 训练数据：官方 DBPA_dataset 全量记录（--full 解压目录，含 32_128/compound/*.pickle 等），**排除** 10% 评测子集
 （--dbpa 下 manifest/sources.csv 的 selected_original_indices，即 2,155 个评测 case），不含 normal。
-测试数据：--cases 下 2,155 个 case 目录（metrics.csv + gold.json；宿主项目为 benchmarks-data/closed_world_rca/dbpa）。
+测试数据：--cases 下 2,155 个 case 目录（metrics.csv + gold.json 或上级 ground_truth.jsonl；宿主项目为 benchmarks-data/profrca_inputs/dbpa）。
 特征只用整段指标，不读注入窗口；复合故障记录按每个标签各复制一份。
 
   random   训练 = 全量 − 子集，测试 = 子集
   loho     留一硬件配置（主口径）；--k-per-label K 时每折每标签只抽 K 条训练记录，重复 --seeds 个种子
 
   DYLD_LIBRARY_PATH=... python -m profrca.train.train_dbpa --full /path/DBPA_dataset \\
-      --dbpa benchmarks-data/DBPA --cases benchmarks-data/closed_world_rca/dbpa
+      --dbpa benchmarks-data/DBPA --cases benchmarks-data/profrca_inputs/dbpa
 """
 from __future__ import annotations
 

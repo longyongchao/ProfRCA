@@ -1,10 +1,13 @@
 """训练公共部分：通用 case 目录读取、LightGBM 拟合配方、交叉验证、小样本抽样、计分与模型清单登记。
 
-通用 case 目录格式（新 benchmark 按此准备即可，宿主项目的 closed_world_rca/<bench>/ 已是此格式）：
+通用 case 目录格式（新 benchmark 按此准备即可）：
 
     <data_dir>/<case_id>/metrics.csv   指标宽表：time 列 + 「实体|指标」列（没有 "|" 时按最后一个下划线切实体）
     <data_dir>/<case_id>/gold.json     标签：{"root_causes": [{"native_label" 或 "label": ..., "location": ...}], ...}
                                        （也可以叫 label.json；其余字段可作分组键，如 benchmark_attrs.hardware）
+
+宿主项目的 benchmarks-data/profrca_inputs/<bench>/ 也可直接使用：case 目录按子数据集嵌套一层
+（<bench>/<subset>/<case_id>/），标签不在 case 目录里，而在上级目录的 ground_truth.jsonl（每行一个 case，按 case_id 查）。
 
 训练配方（三个已发布工具相同，不调参）：lgb.LGBMClassifier(random_state=42, verbose=-1)；
 复合根因 case 按每个标签各复制一行做多分类；服务级定位模型额外用 class_weight="balanced"。
@@ -15,6 +18,7 @@ import hashlib
 import json
 import platform
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -28,12 +32,21 @@ LGB_PARAMS = {"random_state": 42, "verbose": -1}
 
 
 # ---------------------------------------------------------------- 数据
+@lru_cache(maxsize=4)
+def _ground_truth(path):
+    with open(path, encoding="utf-8") as f:
+        return {g["case_id"]: g for g in map(json.loads, f)}
+
+
 def read_gold(d):
     d = Path(d)
     for name in ("gold.json", "label.json"):
         if (d / name).exists():
             return json.loads((d / name).read_text(encoding="utf-8"))
-    raise FileNotFoundError(f"{d} 下没有 gold.json / label.json")
+    for parent in d.resolve().parents:
+        if (parent / "ground_truth.jsonl").exists():
+            return _ground_truth(parent / "ground_truth.jsonl")[d.name]
+    raise FileNotFoundError(f"{d} 下没有 gold.json / label.json，上级目录也没有 ground_truth.jsonl")
 
 
 def labels_of(gold):
@@ -56,9 +69,10 @@ def field(gold, path):
 
 def list_cases(data_dir, case_ids=None):
     """有 metrics.csv 的 case 目录（按名称排序；case_ids 给定时按给定顺序）。"""
-    root = Path(data_dir)
-    ids = case_ids if case_ids is not None else sorted(p.name for p in root.iterdir() if p.is_dir())
-    return [root / c for c in ids if (root / c / "metrics.csv").exists()]
+    # case 目录可以直接在 data_dir 下，也可以按子数据集再嵌套（profrca_inputs 的布局）
+    dirs = {p.parent.name: p.parent for p in sorted(Path(data_dir).rglob("metrics.csv"))}
+    ids = case_ids if case_ids is not None else sorted(dirs)
+    return [dirs[c] for c in ids if c in dirs]
 
 
 def read_ids(path):

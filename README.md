@@ -350,18 +350,18 @@ python -m profrca.train.train_benchmark --data mybench --name mybench \
 
 ### 7.2 复现三个已发布工具
 
-数据位于宿主项目的 `benchmarks-data/closed_world_rca/<bench>/`，与上面的 case 目录格式一致。
+数据位于宿主项目的 `benchmarks-data/profrca_inputs/<bench>/`：case 目录按子数据集嵌套（`<bench>/<subset>/<case_id>/`），标签在 `profrca_inputs/ground_truth.jsonl`，训练脚本会自动查找。
 
 ```sh
 # wangqing：留一组合 + 留一轮 + 先验基线
-python -m profrca.train.train_wangqing --data benchmarks-data/closed_world_rca/wangqing
+python -m profrca.train.train_wangqing --data benchmarks-data/profrca_inputs/wangqing
 
 # RCAEval：service 模式，35 个留出 case 不进训练，留一系统
-python -m profrca.train.train_rcaeval --data benchmarks-data/closed_world_rca/rcaeval
+python -m profrca.train.train_rcaeval --data benchmarks-data/profrca_inputs/rcaeval
 
 # DBPA：需要官方完整 DBPA_dataset（训练用全量减去 10% 评测子集）
 python -m profrca.train.train_dbpa --full /path/to/DBPA_dataset \
-    --dbpa benchmarks-data/DBPA --cases benchmarks-data/closed_world_rca/dbpa \
+    --dbpa benchmarks-data/DBPA --cases benchmarks-data/profrca_inputs/dbpa \
     --k-per-label 20 --seeds 5 --save-members
 ```
 
