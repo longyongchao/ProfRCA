@@ -12,8 +12,13 @@
     pipeline           以上模块的组合（工具优先，未命中回落 LLM）
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
-from .pipeline import diagnose, load_tools  # noqa: E402
+from .api import diagnose, DiagnosisConfig  # noqa: E402
+from .pipeline import load_tools  # noqa: E402
+from .factory import create_method, list_methods  # noqa: E402
+from .inputs import DiagnosisInput  # noqa: E402
+from .llm import LLMConfig  # noqa: E402
 
-__all__ = ["diagnose", "load_tools", "__version__"]
+__all__ = ["diagnose", "load_tools", "create_method", "list_methods", "DiagnosisInput",
+           "DiagnosisConfig", "LLMConfig", "__version__"]

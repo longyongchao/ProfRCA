@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "profrca"
+version = "1.1.0"
+description = "Unified log/metric root-cause diagnosis method library"
+requires-python = ">=3.9"
+dependencies = [
+  "numpy>=1.24.4,<2", "pandas>=2.0.3,<3", "requests>=2.32.5,<3", "drain3==0.9.11",
+]
+
+[project.optional-dependencies]
+tools = ["lightgbm==4.6.0", "scikit-learn==1.4.2"]
+baselines = ["scipy>=1.10,<2", "tiktoken>=0.7,<1"]
+test = ["pytest>=7,<9", "lightgbm==4.6.0", "scikit-learn==1.4.2", "scipy>=1.10,<2", "tiktoken>=0.7,<1"]
+
+[project.scripts]
+profrca = "profrca.__main__:main"
+
+[tool.setuptools]
+packages = ["profrca", "profrca.methods", "profrca.methods.engines", "profrca.train"]
+package-dir = {profrca = "."}
+
+[tool.setuptools.package-data]
+profrca = ["models/*.pkl", "models/*.json", "train/label_info/*.json", "train/splits/*.txt",
+           "third_party/*", "docs/*.md", "docker/Dockerfile.kernel", "examples/*.txt", "examples/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The source itself is a flat package; avoid collecting its __init__ as a test
+# package when the checkout directory contains a hyphen or has a different name.
+addopts = "--confcutdir=tests"

@@ -1,5 +1,27 @@
 # ProfRCA：基于异常画像的可信高效根因诊断
 
+## 统一方法库接口（v1.1）
+
+现在提供 **ProfRCA、直接 LLM、D-Bot、RCA-Agent** 四种方法的统一单案例 API：
+
+```bash
+python -m pip install -e '.[tools,baselines,test]'
+python -m profrca --list-methods
+python -m profrca --method dbot --log examples/log.txt --metrics examples/metric.csv
+```
+
+```python
+from profrca import diagnose, DiagnosisConfig
+result = diagnose(log='log.txt', metrics='metric.csv', method='dbot', config=DiagnosisConfig())
+```
+
+详见 [统一接口及交接说明](docs/UNIFIED_API.md)、[阶段交付与验证记录](docs/HANDOFF.md)、[源码来源与迁移差异](docs/SOURCE_PROVENANCE.md)。
+RCA-Agent 还需按说明构建独立 Docker 内核镜像。工厂、输入校验、D-Bot 长表转换及统一证据字段均已内置。
+默认 method='profrca'，下文既有 ProfRCA 的调用和 pipeline 保留；新增接口的输入验证更严格。
+完整 benchmark 评测和前端留在各自仓库，不是本方法库的职责。
+
+---
+
 ProfRCA 把一次故障的**日志 TXT** 和/或**指标宽表 CSV** 变成按可能性排序的根因候选（最多 4 个），每个候选带一级类别、机制描述、根因位置和可回查的证据编号。
 
 它有两条互补的链路：
