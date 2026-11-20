@@ -720,16 +720,9 @@ def _chat(messages, max_tokens=None, temperature=0.0, timeout=None):
     # 不用 response_format=json_object：实测 DeepSeek-V4-Flash 在该模式下偶发吐满 max_tokens 却返回空 content。
     # 思考模式的 reasoning token 计入 completion_tokens，默认关闭；GLM/Kimi 思考常超过 4000 token，上限放到 32000。DeepSeek 认 thinking，GLM 认 enable_thinking。
     # FAST_RCA_MODEL 只换诊断模型（换模型消融），判官仍用 DEEPSEEK_MODEL。
-    base = os.environ.get("DEEPSEEK_API_BASE", "").rstrip("/")
-    model = os.environ.get("FAST_RCA_MODEL") or os.environ.get("DEEPSEEK_MODEL", "").split(",")[0].strip()
-    body = {"model": model, "messages": messages, "temperature": temperature,
-            "max_tokens": max_tokens or (32000 if THINKING else 800),
-            "chat_template_kwargs": {"thinking": THINKING, "enable_thinking": THINKING}}
-    r = requests.post(f"{base}/chat/completions", timeout=timeout or (3600 if THINKING else 300), proxies={"http": None, "https": None},
-                      headers={"Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}"}, json=body)
-    r.raise_for_status()
-    js = r.json()
-    return js["choices"][0]["message"]["content"] or "", js.get("usage") or {}
+    from .llm import chat
+    return chat(messages, max_tokens=max_tokens or (32000 if THINKING else 800),
+                temperature=temperature, timeout=timeout, thinking=THINKING)
 
 
 def _json_obj(text):
