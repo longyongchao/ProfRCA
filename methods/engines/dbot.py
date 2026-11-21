@@ -340,11 +340,15 @@ class Case:
 # LLM 与树搜索（原仓库 reasoning_algorithms/tree_of_thought/UCT_vote_function.py）
 # ---------------------------------------------------------------------------
 class Budget:
-    def __init__(self, llm_config=None):
+    def __init__(self, llm_config=None, label_space=None):
         self.usage = []
         self.config = llm_config
+        self.label_space = label_space
 
     def chat(self, system, msgs, temperature, max_tokens=MAX_TOKENS):
+        if self.label_space is not None:
+            system += ('\nShared candidate IDs and definitions. They are not case-specific evidence:\n'
+                       + self.label_space.get('prompt', '\n'.join(self.label_space['category'])))
         for k in range(3):   # 端点偶发连接超时：重试，避免整条多轮链作废
             try:
                 content, u = _chat([{"role": "system", "content": system}] + msgs, max_tokens=max_tokens,
@@ -460,9 +464,11 @@ def expert_search(case, name, llm, rng):
     return {"sender": name, "root cause": rc, "messages": best.messages, "role": role}
 
 
-def diagnose(log=None, metrics=None, seed=0, llm_config=None):
+def diagnose(log=None, metrics=None, seed=0, llm_config=None, label_space=None):
+    from .label_space import resolve, instruction, candidates
+    label_space = resolve(label_space)
     rng = np.random.default_rng(seed)
-    case, llm = Case(log, metrics, seed), Budget(llm_config)
+    case, llm = Case(log, metrics, seed), Budget(llm_config, label_space)
     desc = llm.chat(CHIEF_DBA, [{"role": "user", "content": ANOMALY_DESC.format(anomaly_str=case.alert)}], REPORTER_T)
     hired = []
     for _ in range(3):
@@ -490,10 +496,16 @@ def diagnose(log=None, metrics=None, seed=0, llm_config=None):
             x["messages"] = x["messages"] + [msg]
         reviews.append(msg)
     refined = llm.chat(CHIEF_DBA, reviews + [{"role": "user", "content": UPDATE_DIAGNOSIS.format(root_cause=report)}], REPORTER_T)
-    fmt = llm.chat("You are a helpful assistant.", [{"role": "user", "content": FORMAT.format(report=refined)}], 0.0, 800)
+    formatter = FORMAT.format(report=refined) if label_space is None else (
+        'Convert only the causes actually stated in the following diagnosis report. Do not add new causes.\n'
+        + instruction(label_space) + '\nReport:\n' + refined)
+    fmt = llm.chat("You are a helpful assistant.", [{"role": "user", "content": formatter}], 0.0, 800)
     m = re.search(r"\{.*\}", fmt, re.S)
     preds = []
     for rc in ((json.loads(m.group(0)) if m else {}).get("root_causes") or [])[:4]:
+        if label_space is not None:
+            preds.extend(candidates([rc], label_space))
+            continue
         cat, mech, loc = (str(rc.get(k, "")).strip() for k in ("category", "mechanism", "location"))
         preds.append({"type": cat, "headline": mech, "description": f"{mech}（类别 {cat}，位置 {loc}）。{rc.get('why', '')}",
                       "location": loc, "evidence_templates": []})

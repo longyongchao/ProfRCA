@@ -38,7 +38,7 @@ class DbotMethod:
 
     def run(self, data, config, options):
         from .engines import dbot
-        _only(options, ('seed',))
+        _only(options, ('seed', 'label_space'))
         # D-Bot parallelizes expert search: explicitly propagate per-call LLM configuration.
         return dbot.diagnose(data.log, data.metrics, llm_config=current_config(), **options)
 

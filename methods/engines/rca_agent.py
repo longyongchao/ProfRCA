@@ -235,7 +235,7 @@ def _reason_pairs():
 
 def _reason_desc():
     space = _SPACE.get()
-    return {mid: mid for mid in space["category"]} if space else {}
+    return {mid: space.get('descriptions', {}).get(mid, mid) for mid in space["category"]} if space else {}
 
 
 def reason_of(reason):

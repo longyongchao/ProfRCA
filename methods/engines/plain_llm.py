@@ -24,9 +24,12 @@ SYSTEM = """你是资深数据库/分布式系统 SRE。用户在收到告警后
 NO_LOG = "（本次没有可用的日志，只有监控指标。请只依据指标判断。）"
 
 
-def to_predictions(text):
+def to_predictions(text, label_space=None):
     m = re.search(r"\{.*\}", text, re.S)
     obj = json.loads(m.group(0)) if m else {}
+    if label_space is not None:
+        from .label_space import candidates
+        return candidates(obj.get('root_causes') or [], label_space)
     out = []
     for rc in (obj.get("root_causes") or [])[:4]:
         cat, mech, loc = (str(rc.get(k, "")).strip() for k in ("category", "mechanism", "location"))
@@ -37,9 +40,10 @@ def to_predictions(text):
 
 
 def diagnose(log=None, metrics=None, label_space=None):
-    if label_space is not None:
-        from ...errors import ConfigurationError
-        raise ConfigurationError('The full-text baseline preserves the upstream open-category prompt; label_space must be None')
+    from .label_space import resolve, instruction
+    label_space = resolve(label_space)
+    system = SYSTEM if label_space is None else (
+        'You are a database SRE. Diagnose the supplied full logs and metrics.\n' + instruction(label_space))
     parts = [("以下是日志全文：\n\n" + log.read_text(encoding="utf-8-sig")) if log else NO_LOG]
     if metrics is not None:
         parts.append("以下是同一时段的监控指标全文（CSV，time 为秒，其余列为实体|指标）：\n\n"
@@ -51,10 +55,10 @@ def diagnose(log=None, metrics=None, label_space=None):
     usage, preds, error = [], [], None
     for _ in range(2):
         try:
-            content, used = chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
+            content, used = chat([{"role": "system", "content": system}, {"role": "user", "content": user}],
                                  max_tokens=MAX_TOKENS)
             usage.append(used)
-            preds = to_predictions(content)
+            preds = to_predictions(content, label_space)
             if preds:
                 break
         except json.JSONDecodeError as exc:
